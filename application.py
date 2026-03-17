@@ -9,9 +9,14 @@ from colorama import Style, Fore, init
 from flask import Flask, render_template, send_file, request, redirect, url_for, abort, render_template_string, send_from_directory
 from pathlib import Path
 import sys
+from werkzeug.utils import secure_filename
 
 #Init est utilisé pour l'ajout de coleur dans le code
 init()
+
+BASE_DIR = Path(__file__).parent
+UPLOAD_DIR = BASE_DIR / "files"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 #Permet de définir l'application Flask
 app = Flask(__name__)
@@ -44,31 +49,39 @@ def uploaded():
             err = "No selected file"
             return render_template('error.html', err=err)
             #return f'{Fore.RED}[-] No selected file{Fore.RESET}'
-        file_name = file.filename
-        #Check si le fichier entré est bon (test pour répondre à CodeQL)
-        if ".." in file_name or "/" in file_name or "\\" in file_name:
+        original_filename = file.filename
+        # Normalisation et sécurisation du nom de fichier
+        file_name = secure_filename(original_filename)
+        if not file_name:
             err = "Invalid filename"
             return render_template('error.html', err=err)
-            #raise ValueError(f"{Fore.RED}[-] Invalid filename : {file.filename}{Fore.RESET}")
-        else:
-            file_content = process_file(file_name)
-            
-            string_file_content = str(file_content)
-            if string_file_content.__contains__('Errno'):
-                err = file_content
-                return render_template('error.html', err=err)
-            else:
-                print(f"{Fore.GREEN}[+] file uploded ! {file_name}{Fore.RESET}")
-                path = f'{Path(__file__).parent}'
-                path_full_write = f"{path}\\files\{file_name}"
-                content = readfile(file_name)
-                writefile(path_full_write, content)
 
+        # Construction d'un chemin complet sécurisé dans le répertoire d'upload
+        path_full_write = UPLOAD_DIR / file_name
+
+        # Sauvegarde du fichier uploadé dans le répertoire sécurisé
+        try:
+            file.save(str(path_full_write))
+        except Exception as er:
+            err = er
+            return render_template('error.html', err=err)
+
+        # Traitement du fichier YAML via un chemin sécurisé
+        file_content = process_file(str(path_full_write))
+
+        string_file_content = str(file_content)
+        if string_file_content.__contains__('Errno'):
+            err = file_content
+            return render_template('error.html', err=err)
+        else:
+            print(f"{Fore.GREEN}[+] file uploded ! {file_name}{Fore.RESET}")
+            content = readfile(str(path_full_write))
+            writefile(str(path_full_write), content)
 
     return render_template('upload.html', file_content=file_content)
 
-def  readfile(file_name):
-    with open (file_name, "r") as fichier:
+def  readfile(file_path):
+    with open(file_path, "r") as fichier:
         content = fichier.read()
     return content
 
@@ -79,11 +92,12 @@ def writefile(full_path, content):
 
 
 #Utilisation de la fonction vulnérable selon le POC de la CVE-2020-1747
-def process_file(file_name):
+def process_file(file_path):
     #Chargement du fichier YAML
+    file_name = os.path.basename(file_path)
     if ".yaml" in file_name or ".yml" in file_name:
         try:
-            with open(file_name,'rb') as f:
+            with open(file_path, 'rb') as f:
                 content = f.read()
                 data = yaml.load(content, Loader=yaml.FullLoader) # Using vulnerable FullLoader
         except Exception as er:
