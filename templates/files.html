@@ -11,13 +11,13 @@
     <!--
     <div class="logo-container">
         <a href="#"><img src="../static/images/Logo_site_wobg.png" alt="Logo du site" class="logo"></a>
-    </div>
-    -->
+    </div> -->
+    
     <nav class="menu">
         <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/upload">Upload</a></li>
-            <!-- <li><a href="/files">Files</a></li> -->
+            <li><a href="/files">Files</a></li>
             <li><a href="#">À propos</a></li>
             <li><a href="#">Contact</a></li>
         </ul>
@@ -32,7 +32,6 @@
         {% for file in files%}
         <li>
             <a href="http://localhost:5000/view?file={{ file }}" >{{ file }}</a>
-            <!-- {{ file }} -->
         </li>
         {% endfor %}
     </ul>
@@ -54,9 +53,9 @@
     <br><br>
     <br><br>
 
-    <!-- Pied de page 
+    <!-- Pied de page -->
         <p>&copy; 2024 Site de Configuration. Tous droits réservés.</p>
         <p><a href="#">Politique de confidentialité</a> | <a href="#">Conditions d'utilisation</a></p>
-    </footer> -->
+    </footer> 
 </body>
 </html>
