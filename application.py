@@ -33,8 +33,8 @@ def error():
 @app.route('/files')
 def files():
     path = f'{Path(__file__).parent}'
-    file_path = path + "\\files"
-    print(file_path)
+    file_path = os.path.join(path, "files")
+    #print(file_path)
     fichier = []
     for item in os.listdir(file_path):
         fichier.append(item)
@@ -47,7 +47,6 @@ def view_file():
     base_path = os.path.abspath('./files')  # Répertoire sécurisé
     requested_path = os.path.abspath(os.path.join(base_path, filename))
 
-
     try:
         with open(requested_path, 'r') as file:
             content = file.read()  # Lire le contenu du fichier
@@ -59,8 +58,7 @@ def view_file():
 @app.route('/uploaded', methods=['GET', 'POST'])
 def uploaded():
     if request.method == 'POST':
-
-        #Permet la récupération du fcihier depuis l'HTML
+        #Permet la récupération du fichier depuis l'HTML
         if 'file' not in request.files:
             err = "No file part"
             return render_template('error.html', err=err)
@@ -76,6 +74,7 @@ def uploaded():
             return render_template('error.html', err=err)
             #raise ValueError(f"{Fore.RED}[-] Invalid filename : {file.filename}{Fore.RESET}")
         else:
+            file_name = os.path.join("files", file_name)
             file_content = process_file(file_name)
             
             string_file_content = str(file_content)
@@ -85,14 +84,14 @@ def uploaded():
             else:
                 print(f"{Fore.GREEN}[+] file uploded ! {file_name}{Fore.RESET}")
                 path = f'{Path(__file__).parent}'
-                path_full_write = f"{path}\\files\{file_name}"
+                path_full_write = os.path.join(path, file_name)
                 content = readfile(file_name)
                 writefile(path_full_write, content)
 
 
     return render_template('upload.html', file_content=file_content)
 
-def  readfile(file_name):
+def readfile(file_name):
     with open (file_name, "r") as fichier:
         content = fichier.read()
     return content
@@ -161,8 +160,7 @@ def gen_reqtxt(directory):
 
 if __name__ == '__main__':
     #Récupère le path de l'application
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
     directory = f'{Path(__file__).parent}'
     print(directory)
-    gen_reqtxt(directory)
-    app.run(debug=True)
+    #gen_reqtxt(directory)
